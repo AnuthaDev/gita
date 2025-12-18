@@ -16,6 +16,7 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         val verseContainer: View = itemView.findViewById(R.id.verseContainer)
         val speakerName: TextView = itemView.findViewById(R.id.speakerName)
         val verseTitle: TextView = itemView.findViewById(R.id.verseTitle)
+        val speakerPrefix: TextView = itemView.findViewById(R.id.speakerPrefix)
         val sanskritText: TextView = itemView.findViewById(R.id.sanskritText)
         val hindiTranslation: TextView = itemView.findViewById(R.id.hindiTranslation)
         val transliteration: TextView = itemView.findViewById(R.id.transliteration)
@@ -32,13 +33,21 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         
         // Set speaker name
         holder.speakerName.text = verse.speakerString
-        
         // Set verse title
         holder.verseTitle.text = "Chapter ${verse.chapterNumber}, Verse ${verse.verseNumber}"
         
-        // Set Sanskrit text (clean version without speaker prefix)
-        holder.sanskritText.text = verse.sanskritText
+        // Set speaker prefix if present (smaller font)
+        if (verse.hasSpeakerPrefix && verse.speakerPrefixLine != null) {
+            holder.speakerPrefix.visibility = View.VISIBLE
+            holder.speakerPrefix.text = verse.speakerPrefixLine
+        } else {
+            holder.speakerPrefix.visibility = View.GONE
+        }
         
+        // Set main shloka text (without speaker prefix)
+        holder.sanskritText.text = verse.shlokaText
+        
+        // For now, using transliteration as Hindi translation placeholder
         // For now, using transliteration as Hindi translation placeholder
         // You'll need to add actual Hindi translation to the JSON or use word_meanings
         holder.hindiTranslation.text = verse.transliteration
@@ -53,8 +62,9 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
             Speaker.SANJAYA -> ContextCompat.getColor(context, R.color.speaker_sanjaya_bg)
             Speaker.DHRITARASHTRA -> ContextCompat.getColor(context, R.color.speaker_dhritarashtra_bg)
         }
+
         holder.verseContainer.setBackgroundColor(backgroundColor)
-        
+
         // Apply speaker-based text color
         val textColor = when (verse.speaker) {
             Speaker.KRISHNA -> ContextCompat.getColor(context, R.color.speaker_krishna_text)
@@ -64,6 +74,7 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         }
         holder.speakerName.setTextColor(textColor)
         holder.verseTitle.setTextColor(textColor)
+        holder.speakerPrefix.setTextColor(textColor)
         holder.sanskritText.setTextColor(textColor)
         holder.hindiTranslation.setTextColor(textColor)
         holder.transliteration.setTextColor(textColor)

@@ -36,12 +36,19 @@ data class Verse(
     val speaker: Speaker
         get() = Speaker.fromString(speakerString)
     
-    // Extract Sanskrit shloka from text (removes speaker prefix if present)
-    val sanskritText: String
+    // Check if text has speaker prefix
+    val hasSpeakerPrefix: Boolean
+        get() = text.trim().lines().firstOrNull()?.contains("उवाच") == true
+    
+    // Get the speaker prefix line (if exists)
+    val speakerPrefixLine: String?
+        get() = if (hasSpeakerPrefix) text.trim().lines().firstOrNull() else null
+    
+    // Get the main shloka text (excluding speaker prefix if present)
+    val shlokaText: String
         get() {
-            val lines = text.split("\n")
-            // Skip first line if it contains "उवाच"
-            return if (lines.isNotEmpty() && lines[0].contains("उवाच")) {
+            val lines = text.trim().lines()
+            return if (hasSpeakerPrefix && lines.isNotEmpty()) {
                 lines.drop(1).joinToString("\n").trim()
             } else {
                 text.trim()
