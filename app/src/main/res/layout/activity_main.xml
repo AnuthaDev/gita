@@ -15,6 +15,7 @@
         android:background="?attr/colorPrimary"
         app:title="Bhagavad Gita"
         app:titleTextColor="@color/white"
+        app:navigationIcon="@drawable/ic_back"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <!-- ViewPager for verses -->

@@ -7,11 +7,28 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.thesourceofcode.gita.R
+import com.thesourceofcode.gita.model.Chapter
 import com.thesourceofcode.gita.model.Speaker
 import com.thesourceofcode.gita.model.Verse
+import com.thesourceofcode.gita.model.VerseItem
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
-class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<VerseAdapter.VerseViewHolder>() {
+class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_CHAPTER_SUMMARY = 0
+        private const val VIEW_TYPE_VERSE = 1
+    }
+
+    inner class ChapterSummaryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val chapterSummaryContainer: View = itemView.findViewById(R.id.chapterSummaryContainer)
+        val chapterName: TextView = itemView.findViewById(R.id.chapterName)
+        val chapterNameTranslation: TextView = itemView.findViewById(R.id.chapterNameTranslation)
+        val chapterMeaning: TextView = itemView.findViewById(R.id.chapterMeaning)
+        val versesCount: TextView = itemView.findViewById(R.id.versesCount)
+        val summaryHindi: TextView = itemView.findViewById(R.id.summaryHindi)
+        val summaryEnglish: TextView = itemView.findViewById(R.id.summaryEnglish)
+    }
 
     inner class VerseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val verseContainer: View = itemView.findViewById(R.id.verseContainer)
@@ -23,17 +40,51 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         val transliteration: TextView = itemView.findViewById(R.id.transliteration)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerseViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_verse, parent, false)
-        return VerseViewHolder(view)
+    override fun getItemViewType(position: Int): Int {
+        return when (items[position]) {
+            is VerseItem.ChapterSummaryItem -> VIEW_TYPE_CHAPTER_SUMMARY
+            is VerseItem.VerseContentItem -> VIEW_TYPE_VERSE
+        }
     }
 
-    override fun onBindViewHolder(holder: VerseViewHolder, position: Int) {
-        val verse = verses[position]
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            VIEW_TYPE_CHAPTER_SUMMARY -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_chapter_summary, parent, false)
+                ChapterSummaryViewHolder(view)
+            }
+            VIEW_TYPE_VERSE -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_verse, parent, false)
+                VerseViewHolder(view)
+            }
+            else -> throw IllegalArgumentException("Unknown view type")
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (val item = items[position]) {
+            is VerseItem.ChapterSummaryItem -> bindChapterSummary(holder as ChapterSummaryViewHolder, item.chapter)
+            is VerseItem.VerseContentItem -> bindVerse(holder as VerseViewHolder, item.verse)
+        }
+    }
+
+    private fun bindChapterSummary(holder: ChapterSummaryViewHolder, chapter: Chapter) {
+        holder.chapterName.text = chapter.name
+        holder.chapterNameTranslation.text = chapter.nameTransliterated
+        holder.chapterMeaning.text = chapter.nameMeaning
+        holder.versesCount.text = "${chapter.versesCount} verses"
+        holder.summaryHindi.text = chapter.chapterSummaryHindi
+        holder.summaryEnglish.text = chapter.chapterSummary
+    }
+
+    private fun bindVerse(holder: VerseViewHolder, verse: Verse) {
         val context = holder.itemView.context
         
         // Set speaker name
         holder.speakerName.text = verse.speakerString
+        
         // Set verse title
         holder.verseTitle.text = "Chapter ${verse.chapterNumber}, Verse ${verse.verseNumber}"
         
@@ -62,9 +113,8 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
             Speaker.SANJAYA -> ContextCompat.getColor(context, R.color.speaker_sanjaya_bg)
             Speaker.DHRITARASHTRA -> ContextCompat.getColor(context, R.color.speaker_dhritarashtra_bg)
         }
-
         holder.verseContainer.setBackgroundColor(backgroundColor)
-
+        
         // Apply speaker-based text color
         val textColor = when (verse.speaker) {
             Speaker.KRISHNA -> ContextCompat.getColor(context, R.color.speaker_krishna_text)
@@ -80,5 +130,5 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         holder.transliteration.setTextColor(textColor)
     }
 
-    override fun getItemCount(): Int = verses.size
+    override fun getItemCount(): Int = items.size
 }
