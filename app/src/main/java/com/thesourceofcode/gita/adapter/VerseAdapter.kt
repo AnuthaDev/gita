@@ -36,6 +36,9 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         val verseTitle: TextView = itemView.findViewById(R.id.verseTitle)
         val speakerPrefix: TextView = itemView.findViewById(R.id.speakerPrefix)
         val sanskritText: TextView = itemView.findViewById(R.id.sanskritText)
+        val wordMeaningsHeader: View = itemView.findViewById(R.id.wordMeaningsHeader)
+        val wordMeaningsToggle: TextView = itemView.findViewById(R.id.wordMeaningsToggle)
+        val wordMeanings: TextView = itemView.findViewById(R.id.wordMeanings)
         val hindiTranslation: TextView = itemView.findViewById(R.id.hindiTranslation)
         val transliteration: TextView = itemView.findViewById(R.id.transliteration)
     }
@@ -99,6 +102,21 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         // Set main shloka text (without speaker prefix)
         holder.sanskritText.text = verse.shlokaText
         
+        // Set word meanings and toggle functionality
+        holder.wordMeanings.text = formatWordMeanings(verse.wordMeanings)
+        holder.wordMeanings.visibility = View.GONE
+        holder.wordMeaningsToggle.text = " ▼"
+        
+        holder.wordMeaningsHeader.setOnClickListener {
+            if (holder.wordMeanings.visibility == View.GONE) {
+                holder.wordMeanings.visibility = View.VISIBLE
+                holder.wordMeaningsToggle.text = " ▲"
+            } else {
+                holder.wordMeanings.visibility = View.GONE
+                holder.wordMeaningsToggle.text = " ▼"
+            }
+        }
+        
         // Get Hindi translation from translation.json
         val hindiTranslation = GitaJsonParser.getHindiTranslation(context, verse.id)
         holder.hindiTranslation.text = hindiTranslation?.description ?: verse.transliteration
@@ -126,8 +144,30 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         holder.verseTitle.setTextColor(textColor)
         holder.speakerPrefix.setTextColor(textColor)
         holder.sanskritText.setTextColor(textColor)
+        holder.wordMeaningsToggle.setTextColor(textColor)
+        holder.wordMeanings.setTextColor(textColor)
         holder.hindiTranslation.setTextColor(textColor)
         holder.transliteration.setTextColor(textColor)
+    }
+    
+    private fun formatWordMeanings(wordMeanings: String): String {
+        // Split by semicolon to get individual word-meaning pairs
+        val pairs = wordMeanings.split(";")
+        
+        return pairs.mapIndexed { index, pair ->
+            val trimmedPair = pair.trim()
+            if (trimmedPair.isEmpty()) return@mapIndexed ""
+            
+            // Split by em dash (—) to separate word from meaning
+            val parts = trimmedPair.split("—", "-")
+            if (parts.size >= 2) {
+                val word = parts[0].trim()
+                val meaning = parts.subList(1, parts.size).joinToString("—").trim()
+                "• $word — $meaning"
+            } else {
+                "• $trimmedPair"
+            }
+        }.filter { it.isNotEmpty() }.joinToString("\n")
     }
 
     override fun getItemCount(): Int = items.size
