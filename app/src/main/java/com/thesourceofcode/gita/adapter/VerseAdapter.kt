@@ -1,5 +1,6 @@
 package com.thesourceofcode.gita.adapter
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -85,6 +86,10 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
     private fun bindVerse(holder: VerseViewHolder, verse: Verse) {
         val context = holder.itemView.context
         
+        // Load custom fonts
+        val jainiFont = Typeface.createFromAsset(context.assets, "Jaini-Regular.ttf")
+        val hindRegular = Typeface.createFromAsset(context.assets, "Hind/Hind-Regular.ttf")
+        
         // Set speaker name
         holder.speakerName.text = verse.speakerString
         
@@ -95,12 +100,14 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         if (verse.hasSpeakerPrefix && verse.speakerPrefixLine != null) {
             holder.speakerPrefix.visibility = View.VISIBLE
             holder.speakerPrefix.text = verse.speakerPrefixLine
+            holder.speakerPrefix.typeface = jainiFont
         } else {
             holder.speakerPrefix.visibility = View.GONE
         }
         
         // Set main shloka text (without speaker prefix)
         holder.sanskritText.text = verse.shlokaText
+        holder.sanskritText.typeface = jainiFont
         
         // Set word meanings and toggle functionality
         holder.wordMeanings.text = formatWordMeanings(verse.wordMeanings)
@@ -120,6 +127,7 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         // Get Hindi translation from translation.json
         val hindiTranslation = GitaJsonParser.getHindiTranslation(context, verse.id)
         holder.hindiTranslation.text = hindiTranslation?.description ?: verse.transliteration
+        holder.hindiTranslation.typeface = hindRegular
         
         // Set transliteration
         holder.transliteration.text = verse.transliteration
