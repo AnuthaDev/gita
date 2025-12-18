@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thesourceofcode.gita.R
 import com.thesourceofcode.gita.model.Speaker
 import com.thesourceofcode.gita.model.Verse
+import com.thesourceofcode.gita.utils.GitaJsonParser
 
 class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<VerseAdapter.VerseViewHolder>() {
 
@@ -47,10 +48,9 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         // Set main shloka text (without speaker prefix)
         holder.sanskritText.text = verse.shlokaText
         
-        // For now, using transliteration as Hindi translation placeholder
-        // For now, using transliteration as Hindi translation placeholder
-        // You'll need to add actual Hindi translation to the JSON or use word_meanings
-        holder.hindiTranslation.text = verse.transliteration
+        // Get Hindi translation from translation.json
+        val hindiTranslation = GitaJsonParser.getHindiTranslation(context, verse.id)
+        holder.hindiTranslation.text = hindiTranslation?.description ?: verse.transliteration
         
         // Set transliteration
         holder.transliteration.text = verse.transliteration
