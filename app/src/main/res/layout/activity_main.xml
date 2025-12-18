@@ -16,7 +16,20 @@
         app:title="Bhagavad Gita"
         app:titleTextColor="@color/white"
         app:navigationIcon="@drawable/ic_back"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent">
+        
+        <ImageButton
+            android:id="@+id/btnThemeToggle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_dark_mode"
+            android:contentDescription="Toggle theme"
+            android:padding="12dp"/>
+            
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <!-- ViewPager for verses -->
     <androidx.viewpager2.widget.ViewPager2

@@ -2,9 +2,12 @@ package com.thesourceofcode.gita
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
@@ -21,12 +24,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnNext: MaterialButton
     private lateinit var verseCounter: TextView
     private lateinit var toolbar: MaterialToolbar
+    private lateinit var btnThemeToggle: ImageButton
     
     private lateinit var items: List<VerseItem>
     private lateinit var adapter: VerseAdapter
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Load saved theme preference
+        val savedTheme = getSharedPreferences("gita_prefs", MODE_PRIVATE)
+            .getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        AppCompatDelegate.setDefaultNightMode(savedTheme)
+        
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         
@@ -36,6 +46,13 @@ class MainActivity : AppCompatActivity() {
         btnNext = findViewById(R.id.btnNext)
         verseCounter = findViewById(R.id.verseCounter)
         toolbar = findViewById(R.id.toolbar)
+        btnThemeToggle = findViewById(R.id.btnThemeToggle)
+        
+        // Setup theme toggle
+        updateThemeIcon()
+        btnThemeToggle.setOnClickListener {
+            toggleTheme()
+        }
         
         // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -147,5 +164,44 @@ class MainActivity : AppCompatActivity() {
     private fun updateNavigationButtons(position: Int) {
         btnPrevious.isEnabled = position > 0
         btnNext.isEnabled = position < items.size - 1
+    }
+    
+    private fun toggleTheme() {
+        val currentMode = AppCompatDelegate.getDefaultNightMode()
+        val newMode = if (currentMode == AppCompatDelegate.MODE_NIGHT_YES) {
+            AppCompatDelegate.MODE_NIGHT_NO
+        } else {
+            AppCompatDelegate.MODE_NIGHT_YES
+        }
+        
+        // Save preference
+        getSharedPreferences("gita_prefs", MODE_PRIVATE)
+            .edit()
+            .putInt("theme_mode", newMode)
+            .apply()
+        
+        // Apply theme with fade animation
+        window.decorView.animate()
+            .alpha(0f)
+            .setDuration(150)
+            .withEndAction {
+                AppCompatDelegate.setDefaultNightMode(newMode)
+                window.decorView.alpha = 0f
+                window.decorView.animate()
+                    .alpha(1f)
+                    .setDuration(150)
+                    .start()
+            }
+            .start()
+    }
+    
+    private fun updateThemeIcon() {
+        val currentMode = AppCompatDelegate.getDefaultNightMode()
+        val iconRes = if (currentMode == AppCompatDelegate.MODE_NIGHT_YES) {
+            R.drawable.ic_light_mode
+        } else {
+            R.drawable.ic_dark_mode
+        }
+        btnThemeToggle.setImageDrawable(ContextCompat.getDrawable(this, iconRes))
     }
 }
