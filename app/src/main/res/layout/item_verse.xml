@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/verseContainer"
     android:saveEnabled="true"
     android:fillViewport="true">
@@ -17,15 +18,15 @@
             android:id="@+id/chapterIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Chapter 1\nअर्जुनविषादयोग\nArjuna's Dilemma"
+            android:text="Chapter 1\nअर्जुनविषादयोग\nArjun Viṣhād Yog"
             android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center"
             android:textColor="?attr/colorPrimary"
             android:visibility="gone"
+            tools:visibility="visible"
+            android:paddingBottom="16dp"
             android:lineSpacingExtra="4dp"
-            android:paddingVertical="16dp"
-            android:layout_marginBottom="16dp"
             app:layout_constraintTop_toTopOf="parent"/>
 
         <!-- Speaker Indicator -->

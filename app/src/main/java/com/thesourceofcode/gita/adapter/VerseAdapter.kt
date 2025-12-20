@@ -50,7 +50,7 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
             val chapter = GitaJsonParser.getChapter(context, verse.chapterNumber)
             holder.chapterIndicator.visibility = View.VISIBLE
             if (chapter != null) {
-                val chapterText = "Chapter ${verse.chapterNumber}\n${chapter.name}\n${chapter.nameMeaning}"
+                val chapterText = "Chapter ${verse.chapterNumber}\n${chapter.name}\n${chapter.nameTransliterated}"
                 holder.chapterIndicator.text = chapterText
             } else {
                 holder.chapterIndicator.text = "Chapter ${verse.chapterNumber}"
@@ -125,6 +125,7 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         holder.wordMeanings.setTextColor(textColor)
         holder.hindiTranslation.setTextColor(textColor)
         holder.transliteration.setTextColor(textColor)
+        holder.chapterIndicator.setTextColor(textColor)
     }
     
     private fun formatWordMeanings(wordMeanings: String): String {

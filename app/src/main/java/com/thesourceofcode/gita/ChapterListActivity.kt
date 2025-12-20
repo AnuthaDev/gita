@@ -3,6 +3,7 @@ package com.thesourceofcode.gita
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -29,7 +30,8 @@ class ChapterListActivity : AppCompatActivity() {
         val savedTheme = getSharedPreferences("gita_prefs", MODE_PRIVATE)
             .getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         AppCompatDelegate.setDefaultNightMode(savedTheme)
-        
+
+        enableEdgeToEdge()
         setContentView(R.layout.activity_chapter_list)
         
         toolbar = findViewById(R.id.toolbar)
