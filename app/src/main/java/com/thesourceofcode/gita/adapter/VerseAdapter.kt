@@ -43,7 +43,7 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
         
         // Load custom fonts
         val jainiFont = Typeface.createFromAsset(context.assets, "Jaini-Regular.ttf")
-        val hindRegular = Typeface.createFromAsset(context.assets, "Hind/Hind-Regular.ttf")
+        val hindRegular = Typeface.createFromAsset(context.assets, "Hind-Regular.ttf")
         
         // Show chapter indicator for first verse of each chapter
         if (verse.verseNumber == 1) {
