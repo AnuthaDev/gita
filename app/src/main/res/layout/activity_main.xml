@@ -12,10 +12,11 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="?attr/colorSurface"
         app:title="Bhagavad Gita"
-        app:titleTextColor="@color/white"
+        app:titleTextColor="?attr/colorPrimary"
         app:navigationIcon="@drawable/ic_back"
+        app:navigationIconTint="?attr/colorPrimary"
         app:layout_constraintTop_toTopOf="parent">
         
         <ImageButton
@@ -26,6 +27,7 @@
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_info"
+            android:tint="?attr/colorPrimary"
             android:contentDescription="Chapter info"
             android:padding="12dp"/>
         
@@ -37,6 +39,7 @@
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_dark_mode"
+            android:tint="?attr/colorPrimary"
             android:contentDescription="Toggle theme"
             android:padding="12dp"/>
             
@@ -71,12 +74,11 @@
             android:id="@+id/btnPrevious"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
+
             app:icon="@drawable/ic_arrow_left"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            style="@style/Widget.Material3.Button.IconButton.Filled"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_marginEnd="16dp"/>
 
         <!-- Verse Counter -->
@@ -95,12 +97,10 @@
             android:id="@+id/btnNext"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
             app:icon="@drawable/ic_arrow_right"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            style="@style/Widget.Material3.Button.IconButton.Filled"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_marginStart="16dp"/>
 
     </LinearLayout>

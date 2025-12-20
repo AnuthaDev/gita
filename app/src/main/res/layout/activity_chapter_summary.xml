@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:id="@+id/main"
+    >
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_back"
+        app:navigationIconTint="?attr/colorPrimary"
+        app:title="Chapter Summary"
+        app:titleTextColor="?attr/colorPrimary" />
 
-        <!-- Toolbar -->
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:title="Chapter Summary"
-            app:titleTextColor="@color/white"
-            app:navigationIcon="@drawable/ic_back"
-            app:layout_constraintTop_toTopOf="parent"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -31,123 +36,121 @@
                 android:id="@+id/chapterName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:text="अर्जुनविषादयोग"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:gravity="center"
-                android:textColor="?attr/colorPrimary"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent" />
 
             <!-- Chapter Name Translation -->
             <TextView
                 android:id="@+id/chapterNameTranslation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Arjun Viṣhād Yog"
-                android:textSize="18sp"
-                android:gravity="center"
                 android:layout_marginTop="8dp"
                 android:alpha="0.8"
-                app:layout_constraintTop_toBottomOf="@id/chapterName"/>
+                android:gravity="center"
+                android:text="Arjun Viṣhād Yog"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@id/chapterName" />
 
             <!-- Chapter Meaning -->
             <TextView
                 android:id="@+id/chapterMeaning"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:alpha="0.7"
+                android:gravity="center"
                 android:text="Arjuna's Dilemma"
                 android:textSize="16sp"
                 android:textStyle="italic"
-                android:gravity="center"
-                android:layout_marginTop="4dp"
-                android:alpha="0.7"
-                app:layout_constraintTop_toBottomOf="@id/chapterNameTranslation"/>
+                app:layout_constraintTop_toBottomOf="@id/chapterNameTranslation" />
 
             <!-- Verses Count -->
             <TextView
                 android:id="@+id/versesCount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="47 verses"
-                android:textSize="14sp"
-                android:gravity="center"
                 android:layout_marginTop="8dp"
                 android:alpha="0.6"
-                app:layout_constraintTop_toBottomOf="@id/chapterMeaning"/>
+                android:gravity="center"
+                android:text="47 verses"
+                android:textSize="14sp"
+                app:layout_constraintTop_toBottomOf="@id/chapterMeaning" />
 
             <!-- Divider -->
             <View
                 android:id="@+id/divider1"
                 android:layout_width="100dp"
                 android:layout_height="2dp"
-                android:background="?attr/colorPrimary"
-                android:alpha="0.3"
                 android:layout_marginTop="24dp"
-                app:layout_constraintTop_toBottomOf="@id/versesCount"
+                android:alpha="0.3"
+                android:background="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintTop_toBottomOf="@id/versesCount" />
 
             <!-- Hindi Summary Label -->
             <TextView
                 android:id="@+id/summaryHindiLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
                 android:text="सारांश"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginTop="24dp"
-                app:layout_constraintTop_toBottomOf="@id/divider1"
-                app:layout_constraintStart_toStartOf="parent"/>
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider1" />
 
             <!-- Hindi Summary -->
             <TextView
                 android:id="@+id/summaryHindi"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="4dp"
                 android:text="Hindi summary"
                 android:textSize="15sp"
-                android:lineSpacingExtra="4dp"
-                android:layout_marginTop="12dp"
-                app:layout_constraintTop_toBottomOf="@id/summaryHindiLabel"/>
+                app:layout_constraintTop_toBottomOf="@id/summaryHindiLabel" />
 
             <!-- Divider -->
             <View
                 android:id="@+id/divider2"
                 android:layout_width="100dp"
                 android:layout_height="2dp"
-                android:background="?attr/colorPrimary"
-                android:alpha="0.3"
                 android:layout_marginTop="24dp"
-                app:layout_constraintTop_toBottomOf="@id/summaryHindi"
+                android:alpha="0.3"
+                android:background="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintTop_toBottomOf="@id/summaryHindi" />
 
             <!-- English Summary Label -->
             <TextView
                 android:id="@+id/summaryEnglishLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
                 android:text="Summary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginTop="24dp"
-                app:layout_constraintTop_toBottomOf="@id/divider2"
-                app:layout_constraintStart_toStartOf="parent"/>
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider2" />
 
             <!-- English Summary -->
             <TextView
                 android:id="@+id/summaryEnglish"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="4dp"
+                android:paddingBottom="32dp"
                 android:text="English summary"
                 android:textSize="15sp"
-                android:lineSpacingExtra="4dp"
-                android:layout_marginTop="12dp"
-                android:paddingBottom="32dp"
-                app:layout_constraintTop_toBottomOf="@id/summaryEnglishLabel"/>
+                app:layout_constraintTop_toBottomOf="@id/summaryEnglishLabel" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</ScrollView>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

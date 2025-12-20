@@ -2,7 +2,10 @@ package com.thesourceofcode.gita
 
 import android.os.Bundle
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
@@ -10,6 +13,7 @@ class ChapterSummaryActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_chapter_summary)
         
         val chapterNumber = intent.getIntExtra("CHAPTER_NUMBER", 1)
@@ -19,6 +23,13 @@ class ChapterSummaryActivity : AppCompatActivity() {
         toolbar.title = "Chapter $chapterNumber"
         toolbar.setNavigationOnClickListener {
             finish()
+        }
+
+        // Apply window insets
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
         
         // Load chapter data

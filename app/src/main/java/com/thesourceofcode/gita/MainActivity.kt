@@ -19,6 +19,11 @@ import com.thesourceofcode.gita.utils.GitaJsonParser
 
 class MainActivity : AppCompatActivity() {
     
+    companion object {
+        private const val KEY_CURRENT_POSITION = "viewpager_position"
+        private const val KEY_SCROLL_POSITION = "scroll_position"
+    }
+    
     private lateinit var viewPager: ViewPager2
     private lateinit var btnPrevious: MaterialButton
     private lateinit var btnNext: MaterialButton
@@ -71,10 +76,6 @@ class MainActivity : AppCompatActivity() {
         // Load verses
         verses = GitaJsonParser.loadVerses(this)
         
-        // Get starting chapter if provided
-        val startChapter = intent.getIntExtra("CHAPTER_NUMBER", 1)
-        val startPosition = verses.indexOfFirst { it.chapterNumber == startChapter }
-        
         // Setup ViewPager
         adapter = VerseAdapter(verses)
         viewPager.adapter = adapter
@@ -83,11 +84,42 @@ class MainActivity : AppCompatActivity() {
         // Setup navigation listeners
         setupNavigation()
         
-        // Set initial position
-        if (startPosition >= 0) {
-            viewPager.setCurrentItem(startPosition, false)
+        // Check for saved position from theme change
+        val prefs = getSharedPreferences("gita_prefs", MODE_PRIVATE)
+        val savedPosition = prefs.getInt(KEY_CURRENT_POSITION, -1)
+        val savedScrollY = prefs.getInt(KEY_SCROLL_POSITION, -1)
+        
+        if (savedPosition >= 0) {
+            // Restore from theme change
+            viewPager.setCurrentItem(savedPosition, false)
+            
+            // Clear saved position
+            prefs.edit()
+                .remove(KEY_CURRENT_POSITION)
+                .remove(KEY_SCROLL_POSITION)
+                .apply()
+            
+            // Restore scroll position after layout is complete
+            if (savedScrollY >= 0) {
+                viewPager.post {
+                    val recyclerView = viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView
+                    recyclerView?.let { rv ->
+                        val viewHolder = rv.findViewHolderForAdapterPosition(savedPosition)
+                        viewHolder?.itemView?.findViewById<android.widget.ScrollView>(R.id.verseContainer)?.scrollTo(0, savedScrollY)
+                    }
+                }
+            }
         } else {
-            updateCounter(0)
+            // Get starting chapter if provided
+            val startChapter = intent.getIntExtra("CHAPTER_NUMBER", 1)
+            val startPosition = verses.indexOfFirst { it.chapterNumber == startChapter }
+            
+            // Set initial position
+            if (startPosition >= 0) {
+                viewPager.setCurrentItem(startPosition, false)
+            } else {
+                updateCounter(0)
+            }
         }
         
         // Toolbar navigation
@@ -162,10 +194,24 @@ class MainActivity : AppCompatActivity() {
             AppCompatDelegate.MODE_NIGHT_YES
         }
         
-        // Save preference
+        // Save current ViewPager position and ScrollView scroll position
+        val currentPosition = viewPager.currentItem
+        var scrollY = 0
+        
+        val recyclerView = viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView
+        recyclerView?.let { rv ->
+            val viewHolder = rv.findViewHolderForAdapterPosition(currentPosition)
+            viewHolder?.itemView?.findViewById<android.widget.ScrollView>(R.id.verseContainer)?.let { scrollView ->
+                scrollY = scrollView.scrollY
+            }
+        }
+        
+        // Save preference and positions
         getSharedPreferences("gita_prefs", MODE_PRIVATE)
             .edit()
             .putInt("theme_mode", newMode)
+            .putInt(KEY_CURRENT_POSITION, currentPosition)
+            .putInt(KEY_SCROLL_POSITION, scrollY)
             .apply()
         
         // Apply theme with fade animation

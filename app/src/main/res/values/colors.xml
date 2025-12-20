@@ -14,8 +14,10 @@
     <color name="speaker_arjuna_text">#E65100</color> <!-- Dark Orange -->
     <color name="speaker_sanjaya_text">#4A148C</color> <!-- Dark Purple -->
     <color name="speaker_dhritarashtra_text">#3E2723</color> <!-- Dark Brown -->
-    
+
     <!-- Common Text Colors -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+
+    <color name="myPrimary">#FF7722</color>
 </resources>

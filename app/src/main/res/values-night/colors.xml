@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Speaker Background Colors - Dark Mode -->
-    <color name="speaker_krishna_bg">#1565C0</color> <!-- Darker Blue -->
-    <color name="speaker_arjuna_bg">#EF6C00</color> <!-- Darker Orange -->
-    <color name="speaker_sanjaya_bg">#6A1B9A</color> <!-- Darker Purple -->
-    <color name="speaker_dhritarashtra_bg">#5D4037</color> <!-- Darker Brown -->
-    
+<!--    <color name="speaker_krishna_bg">#1565C0</color> &lt;!&ndash; Darker Blue &ndash;&gt;-->
+<!--    <color name="speaker_arjuna_bg">#EF6C00</color> &lt;!&ndash; Darker Orange &ndash;&gt;-->
+<!--    <color name="speaker_sanjaya_bg">#6A1B9A</color> &lt;!&ndash; Darker Purple &ndash;&gt;-->
+<!--    <color name="speaker_dhritarashtra_bg">#5D4037</color> &lt;!&ndash; Darker Brown &ndash;&gt;-->
+
+
+    <color name="speaker_krishna_bg">#333333</color> <!-- Darker Blue -->
+    <color name="speaker_arjuna_bg">#333333</color> <!-- Darker Orange -->
+    <color name="speaker_sanjaya_bg">#333333</color> <!-- Darker Purple -->
+    <color name="speaker_dhritarashtra_bg">#333333</color> <!-- Darker Brown -->
+
     <!-- Speaker Text Colors - Dark Mode -->
     <color name="speaker_krishna_text">#BBDEFB</color> <!-- Light Blue -->
     <color name="speaker_arjuna_text">#FFE0B2</color> <!-- Light Orange -->
@@ -15,4 +21,7 @@
     <!-- Common Text Colors -->
     <color name="text_primary">#E0E0E0</color>
     <color name="text_secondary">#BDBDBD</color>
+
+    <color name="myPrimary">#FF7722</color>
+
 </resources>
