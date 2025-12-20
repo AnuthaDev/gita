@@ -27,6 +27,12 @@
             android:name=".MainActivity"
             android:exported="false"
             android:parentActivityName=".ChapterListActivity"/>
+        
+        <!-- Chapter Summary Activity -->
+        <activity
+            android:name=".ChapterSummaryActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"/>
             
     </application>
 

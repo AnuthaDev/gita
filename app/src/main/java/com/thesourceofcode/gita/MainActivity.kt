@@ -25,8 +25,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var verseCounter: TextView
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnThemeToggle: ImageButton
+    private lateinit var btnInfo: ImageButton
     
-    private lateinit var items: List<VerseItem>
+    private lateinit var verses: List<com.thesourceofcode.gita.model.Verse>
     private lateinit var adapter: VerseAdapter
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +55,12 @@ class MainActivity : AppCompatActivity() {
             toggleTheme()
         }
         
+        // Setup info button
+        btnInfo = toolbar.findViewById(R.id.btnInfo)
+        btnInfo.setOnClickListener {
+            showCurrentChapterSummary()
+        }
+        
         // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -61,20 +68,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         
-        // Build items list with chapter summaries
-        items = buildItemsList()
+        // Load verses
+        verses = GitaJsonParser.loadVerses(this)
         
         // Get starting chapter if provided
         val startChapter = intent.getIntExtra("CHAPTER_NUMBER", 1)
-        val startPosition = items.indexOfFirst { item ->
-            when (item) {
-                is VerseItem.ChapterSummaryItem -> item.chapter.chapterNumber == startChapter
-                is VerseItem.VerseContentItem -> item.verse.chapterNumber == startChapter && item.verse.verseNumber == 1
-            }
-        }
+        val startPosition = verses.indexOfFirst { it.chapterNumber == startChapter }
         
         // Setup ViewPager
-        adapter = VerseAdapter(items)
+        adapter = VerseAdapter(verses)
         viewPager.adapter = adapter
         viewPager.offscreenPageLimit = 1
         
@@ -94,23 +96,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun buildItemsList(): List<VerseItem> {
-        val verses = GitaJsonParser.loadVerses(this)
-        val chapters = GitaJsonParser.loadChapters(this)
-        val itemsList = mutableListOf<VerseItem>()
-        
-        // Group verses by chapter
-        val versesByChapter = verses.groupBy { it.chapterNumber }
-        
-        // For each chapter, add summary first, then verses
-        chapters.forEach { chapter ->
-            itemsList.add(VerseItem.ChapterSummaryItem(chapter))
-            versesByChapter[chapter.chapterNumber]?.forEach { verse ->
-                itemsList.add(VerseItem.VerseContentItem(verse))
-            }
+    private fun showCurrentChapterSummary() {
+        val currentPosition = viewPager.currentItem
+        if (currentPosition >= 0 && currentPosition < verses.size) {
+            val verse = verses[currentPosition]
+            val intent = Intent(this, ChapterSummaryActivity::class.java)
+            intent.putExtra("CHAPTER_NUMBER", verse.chapterNumber)
+            intent.putExtra("FROM_READING", true)
+            startActivity(intent)
         }
-        
-        return itemsList
     }
     
     private fun setupNavigation() {
@@ -134,7 +128,7 @@ class MainActivity : AppCompatActivity() {
         // Next button click
         btnNext.setOnClickListener {
             val currentPosition = viewPager.currentItem
-            if (currentPosition < items.size - 1) {
+            if (currentPosition < verses.size - 1) {
                 viewPager.currentItem = currentPosition + 1
             }
         }
@@ -144,26 +138,14 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun updateCounter(position: Int) {
-        when (val item = items[position]) {
-            is VerseItem.ChapterSummaryItem -> {
-                toolbar.title = "Chapter ${item.chapter.chapterNumber}"
-                verseCounter.text = "Summary"
-            }
-            is VerseItem.VerseContentItem -> {
-                val verse = item.verse
-                // Calculate actual verse position (excluding chapter summaries)
-                val versePosition = items.take(position + 1).count { it is VerseItem.VerseContentItem }
-                val totalVerses = items.count { it is VerseItem.VerseContentItem }
-                
-                toolbar.title = "Chapter ${verse.chapterNumber}"
-                verseCounter.text = "$versePosition / $totalVerses"
-            }
-        }
+        val verse = verses[position]
+        toolbar.title = "Chapter ${verse.chapterNumber}"
+        verseCounter.text = "${position + 1} / ${verses.size}"
     }
     
     private fun updateNavigationButtons(position: Int) {
         btnPrevious.isEnabled = position > 0
-        btnNext.isEnabled = position < items.size - 1
+        btnNext.isEnabled = position < verses.size - 1
     }
     
     private fun toggleTheme() {

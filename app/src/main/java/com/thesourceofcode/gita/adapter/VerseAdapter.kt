@@ -8,31 +8,15 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.thesourceofcode.gita.R
-import com.thesourceofcode.gita.model.Chapter
 import com.thesourceofcode.gita.model.Speaker
 import com.thesourceofcode.gita.model.Verse
-import com.thesourceofcode.gita.model.VerseItem
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
-class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-    companion object {
-        private const val VIEW_TYPE_CHAPTER_SUMMARY = 0
-        private const val VIEW_TYPE_VERSE = 1
-    }
-
-    inner class ChapterSummaryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val chapterSummaryContainer: View = itemView.findViewById(R.id.chapterSummaryContainer)
-        val chapterName: TextView = itemView.findViewById(R.id.chapterName)
-        val chapterNameTranslation: TextView = itemView.findViewById(R.id.chapterNameTranslation)
-        val chapterMeaning: TextView = itemView.findViewById(R.id.chapterMeaning)
-        val versesCount: TextView = itemView.findViewById(R.id.versesCount)
-        val summaryHindi: TextView = itemView.findViewById(R.id.summaryHindi)
-        val summaryEnglish: TextView = itemView.findViewById(R.id.summaryEnglish)
-    }
+class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<VerseAdapter.VerseViewHolder>() {
 
     inner class VerseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val verseContainer: View = itemView.findViewById(R.id.verseContainer)
+        val chapterIndicator: TextView = itemView.findViewById(R.id.chapterIndicator)
         val speakerName: TextView = itemView.findViewById(R.id.speakerName)
         val verseTitle: TextView = itemView.findViewById(R.id.verseTitle)
         val speakerPrefix: TextView = itemView.findViewById(R.id.speakerPrefix)
@@ -44,51 +28,36 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         val transliteration: TextView = itemView.findViewById(R.id.transliteration)
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
-            is VerseItem.ChapterSummaryItem -> VIEW_TYPE_CHAPTER_SUMMARY
-            is VerseItem.VerseContentItem -> VIEW_TYPE_VERSE
-        }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerseViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_verse, parent, false)
+        return VerseViewHolder(view)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
-            VIEW_TYPE_CHAPTER_SUMMARY -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_chapter_summary, parent, false)
-                ChapterSummaryViewHolder(view)
-            }
-            VIEW_TYPE_VERSE -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_verse, parent, false)
-                VerseViewHolder(view)
-            }
-            else -> throw IllegalArgumentException("Unknown view type")
-        }
+    override fun onBindViewHolder(holder: VerseViewHolder, position: Int) {
+        bindVerse(holder, verses[position], position)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (val item = items[position]) {
-            is VerseItem.ChapterSummaryItem -> bindChapterSummary(holder as ChapterSummaryViewHolder, item.chapter)
-            is VerseItem.VerseContentItem -> bindVerse(holder as VerseViewHolder, item.verse)
-        }
-    }
-
-    private fun bindChapterSummary(holder: ChapterSummaryViewHolder, chapter: Chapter) {
-        holder.chapterName.text = chapter.name
-        holder.chapterNameTranslation.text = chapter.nameTransliterated
-        holder.chapterMeaning.text = chapter.nameMeaning
-        holder.versesCount.text = "${chapter.versesCount} verses"
-        holder.summaryHindi.text = chapter.chapterSummaryHindi
-        holder.summaryEnglish.text = chapter.chapterSummary
-    }
-
-    private fun bindVerse(holder: VerseViewHolder, verse: Verse) {
+    private fun bindVerse(holder: VerseViewHolder, verse: Verse, position: Int) {
         val context = holder.itemView.context
         
         // Load custom fonts
         val jainiFont = Typeface.createFromAsset(context.assets, "Jaini-Regular.ttf")
         val hindRegular = Typeface.createFromAsset(context.assets, "Hind/Hind-Regular.ttf")
+        
+        // Show chapter indicator for first verse of each chapter
+        if (verse.verseNumber == 1) {
+            val chapter = GitaJsonParser.getChapter(context, verse.chapterNumber)
+            holder.chapterIndicator.visibility = View.VISIBLE
+            if (chapter != null) {
+                val chapterText = "Chapter ${verse.chapterNumber}\n${chapter.name}\n${chapter.nameMeaning}"
+                holder.chapterIndicator.text = chapterText
+            } else {
+                holder.chapterIndicator.text = "Chapter ${verse.chapterNumber}"
+            }
+        } else {
+            holder.chapterIndicator.visibility = View.GONE
+        }
         
         // Set speaker name
         holder.speakerName.text = verse.speakerString
@@ -178,5 +147,5 @@ class VerseAdapter(private val items: List<VerseItem>) : RecyclerView.Adapter<Re
         }.filter { it.isNotEmpty() }.joinToString("\n")
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = verses.size
 }
