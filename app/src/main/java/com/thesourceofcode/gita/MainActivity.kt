@@ -140,7 +140,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateCounter(position: Int) {
         val verse = verses[position]
         toolbar.title = "Chapter ${verse.chapterNumber}"
-        verseCounter.text = "${position + 1} / ${verses.size}"
+        
+        // Calculate verse position within current chapter
+        val versesInChapter = verses.filter { it.chapterNumber == verse.chapterNumber }
+        val versePositionInChapter = versesInChapter.indexOfFirst { it.id == verse.id } + 1
+        val totalVersesInChapter = versesInChapter.size
+        
+        verseCounter.text = "${verse.chapterNumber} - $versePositionInChapter/$totalVersesInChapter"
     }
     
     private fun updateNavigationButtons(position: Int) {

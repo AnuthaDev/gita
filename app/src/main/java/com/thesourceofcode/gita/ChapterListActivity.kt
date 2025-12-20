@@ -53,13 +53,21 @@ class ChapterListActivity : AppCompatActivity() {
         
         // Setup RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = ChapterListAdapter(chapters) { chapter ->
-            onChapterClicked(chapter)
-        }
+        recyclerView.adapter = ChapterListAdapter(
+            chapters,
+            onChapterClick = { chapter -> onChapterClicked(chapter) },
+            onInfoClick = { chapter -> onInfoClicked(chapter) }
+        )
     }
     
     private fun onChapterClicked(chapter: Chapter) {
         val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("CHAPTER_NUMBER", chapter.chapterNumber)
+        startActivity(intent)
+    }
+    
+    private fun onInfoClicked(chapter: Chapter) {
+        val intent = Intent(this, ChapterSummaryActivity::class.java)
         intent.putExtra("CHAPTER_NUMBER", chapter.chapterNumber)
         startActivity(intent)
     }
