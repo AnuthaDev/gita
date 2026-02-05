@@ -21,6 +21,18 @@
         app:layout_constraintTop_toTopOf="parent">
         
         <ImageButton
+            android:id="@+id/btnBookmark"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_bookmark_border"
+            android:tint="?attr/colorPrimary"
+            android:contentDescription="Bookmark verse"
+            android:padding="12dp"/>
+        
+        <ImageButton
             android:id="@+id/btnLanguageToggle"
             android:layout_width="48dp"
             android:layout_height="48dp"

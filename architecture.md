@@ -47,16 +47,19 @@ app/src/main/
 │   ├── adapter/
 │   │   ├── VerseAdapter.kt               # ViewPager2 adapter for verses
 │   │   ├── ChapterListAdapter.kt         # RecyclerView adapter for chapters
-│   │   └── AuthorAdapter.kt              # RecyclerView adapter for author selection
+│   │   ├── AuthorAdapter.kt              # RecyclerView adapter for author selection
+│   │   └── SavedVersesAdapter.kt         # RecyclerView adapter for saved verses
 │   ├── model/
 │   │   ├── Verse.kt                      # Verse data model
 │   │   ├── Chapter.kt                    # Chapter data model
 │   │   ├── Translation.kt                # Translation data model
 │   │   ├── Speaker.kt                    # Speaker enum (Krishna, Arjuna, etc.)
 │   │   ├── LanguageAuthor.kt             # Language and author data model
+│   │   ├── BookmarkedVerse.kt            # Bookmarked verse data model
 │   │   └── VerseItem.kt                  # Additional verse item model
 │   └── utils/
-│       └── GitaJsonParser.kt             # JSON parsing and data access
+│       ├── GitaJsonParser.kt             # JSON parsing and data access
+│       └── BookmarkManager.kt            # Bookmark management utility
 └── res/
     ├── layout/                           # XML layouts for activities and items
     ├── values/                           # Colors, strings, themes (light mode)
@@ -86,13 +89,23 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
 ### 1. Activities
 
 #### ChapterListActivity
-- **Purpose**: Display all 18 chapters in a scrollable list
+- **Purpose**: Display all 18 chapters in a scrollable list and manage saved verses
 - **Key Features**:
-  - Shows chapter number, name (Sanskrit & transliterated), meaning, and verse count
-  - Two click actions: 
+  - Bottom navigation with two tabs:
+    - **Chapters**: Shows all 18 chapters with metadata
+    - **Saved**: Displays bookmarked verses
+  - Chapter list shows: number, name (Sanskrit & transliterated), meaning, and verse count
+  - Two click actions on chapters:
     - Click chapter → navigate to reading that chapter
     - Click info button → view chapter summary
+  - Saved verses list shows:
+    - Verse reference (Chapter X, Verse Y)
+    - Preview of Sanskrit text
+    - Preview of translation
+  - Click on saved verse → opens MainActivity at that verse
+  - Empty state message when no verses are saved
   - Theme toggle button in toolbar
+  - Refreshes saved verses list when returning from reading
 
 #### MainActivity (Reading Screen)
 - **Purpose**: Display verses with swipe navigation
@@ -100,6 +113,10 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
   - ViewPager2 for horizontal verse swiping
   - Previous/Next navigation buttons
   - Verse counter showing position within current chapter
+  - **Bookmark button** in toolbar:
+    - Toggle bookmark for current verse
+    - Icon changes based on bookmark state (filled/outlined)
+    - Updates dynamically when swiping between verses
   - Theme toggle (light/dark mode)
   - Translation language and author selection via bottom sheet
   - Bottom sheet displays current language and author with expansion to show:
@@ -108,6 +125,7 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
   - Preserves language and author preferences in SharedPreferences
   - Preserves scroll position during theme changes
   - Accepts `CHAPTER_NUMBER` intent extra to start at specific chapter
+  - Accepts `VERSE_ID` intent extra to open specific verse (used from saved verses)
 
 #### ChapterSummaryActivity
 - **Purpose**: Display detailed chapter information
@@ -141,6 +159,14 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
   - Displays list of available authors for selected language
   - Handles author selection clicks
   - Triggers language and author update in MainActivity
+
+#### SavedVersesAdapter
+- **Type**: RecyclerView.Adapter for bookmarked verses list
+- **Responsibilities**:
+  - Displays list of saved/bookmarked verses
+  - Shows verse reference, Sanskrit text preview, and translation preview
+  - Handles verse click to open in MainActivity
+  - Maps bookmark data to actual verse content
 
 #### ChapterListAdapter
 - **Type**: RecyclerView.Adapter for chapter list
@@ -226,6 +252,36 @@ data class LanguageAuthor(
 - **Hindi**: Swami Ramsukhdas, Swami Tejomayananda
 - **English**: Swami Adidevananda, Swami Gambirananda, Swami Sivananda, Dr. S. Sankaranarayan, Shri Purohit Swami
 
+#### BookmarkedVerse
+```kotlin
+data class BookmarkedVerse(
+    val verseId: Int,
+    val chapterNumber: Int,
+    val verseNumber: Int,
+    val timestamp: Long           // When it was bookmarked
+)
+```
+
+### 4. Utility Classes
+
+#### BookmarkManager (Singleton)
+Manages verse bookmarks using SharedPreferences:
+
+**Data Storage**:
+- `getBookmarks(context)` - Returns list of all bookmarked verses
+- `isBookmarked(context, verseId)` - Checks if a verse is bookmarked
+
+**Bookmark Operations**:
+- `addBookmark(context, verseId, chapterNumber, verseNumber)` - Adds a bookmark
+- `removeBookmark(context, verseId)` - Removes a bookmark
+- `toggleBookmark(context, verseId, chapterNumber, verseNumber)` - Toggles bookmark state
+
+**Storage Strategy**:
+- Stores bookmarks as JSON in SharedPreferences
+- Uses Gson for serialization/deserialization
+- Prevents duplicate bookmarks
+- Maintains insertion order via timestamp
+
 ## Data Layer
 
 ### GitaJsonParser (Singleton)
@@ -260,10 +316,23 @@ A utility object that provides data access methods:
 #### activity_chapter_list.xml
 - MaterialToolbar with title and theme toggle
 - RecyclerView for chapter list
-- Uses item_chapter.xml for each list item
+- RecyclerView for saved verses list (initially hidden)
+- Empty state view for when no verses are saved:
+  - Bookmark icon
+  - "No saved verses" message
+  - Helper text about bookmarking
+- BottomNavigationView with two items:
+  - Home/Chapters tab
+  - Saved verses tab
+- Uses item_chapter.xml for each chapter
+- Uses item_saved_verse.xml for each saved verse
 
 #### activity_main.xml (Reading Screen)
-- MaterialToolbar with chapter title, translation language toggle, and theme toggle
+- MaterialToolbar with:
+  - Chapter title
+  - Bookmark button (bookmark/unbookmark current verse)
+  - Translation language toggle
+  - Theme toggle
 - ViewPager2 for verse pagination
 - Bottom navigation bar with previous/next buttons and verse counter
 - Uses item_verse.xml for each verse page
@@ -306,6 +375,14 @@ A utility object that provides data access methods:
 - MaterialCardView containing author name
 - Clickable to select author and update translations
 
+#### item_saved_verse.xml
+- MaterialCardView for each saved verse
+- Contains:
+  - Verse reference text (Chapter X, Verse Y)
+  - Sanskrit text preview (2 lines max with ellipsis)
+  - Translation preview (2 lines max with ellipsis)
+- Clickable to open verse in reading view
+
 ### Theme System
 
 #### Speaker-Based Color Theming
@@ -339,19 +416,27 @@ Each speaker has unique background and text colors that differ between light and
 App Launch
     ↓
 ChapterListActivity (Home)
-    ├── Click Chapter → MainActivity (start at chapter)
-    │       ├── Swipe/Navigate between verses
-    │       ├── Toggle translation language (Hindi/English)
-    │       └── Back → ChapterListActivity
-    │
-    └── Click Info Button → ChapterSummaryActivity
-            └── Back → ChapterListActivity
+    ├── Bottom Navigation:
+    │   ├── Chapters Tab (default)
+    │   │   ├── Click Chapter → MainActivity (start at chapter)
+    │   │   │       ├── Swipe/Navigate between verses
+    │   │   │       ├── Bookmark/unbookmark verses
+    │   │   │       ├── Toggle translation language and author
+    │   │   │       └── Back → ChapterListActivity
+    │   │   │
+    │   │   └── Click Info Button → ChapterSummaryActivity
+    │   │           └── Back → ChapterListActivity
+    │   │
+    │   └── Saved Tab
+    │       └── Click Saved Verse → MainActivity (open at that verse)
+    │               └── Back → ChapterListActivity (Saved tab)
 ```
 
 ### Intent Parameters
 
 **MainActivity**:
 - `CHAPTER_NUMBER` (Int) - Starting chapter number (1-18)
+- `VERSE_ID` (Int, Optional) - Specific verse ID to open (used from saved verses)
 
 **ChapterSummaryActivity**:
 - `CHAPTER_NUMBER` (Int) - Chapter to display
@@ -435,6 +520,7 @@ ChapterListActivity (Home)
 - **Theme Preference**: Stored in SharedPreferences (`gita_prefs`, key: `theme_mode`)
 - **Translation Language Preference**: Stored in SharedPreferences (`gita_prefs`, key: `translation_language`)
 - **Translation Author Preference**: Stored in SharedPreferences (`gita_prefs`, key: `translation_author`)
+- **Bookmarked Verses**: Stored in SharedPreferences (`gita_bookmarks`, key: `bookmarked_verses`) as JSON array
 - **Reading Position**: Intent extras and SharedPreferences
 - **Scroll Position**: Preserved during theme changes
 - **ViewPager Position**: Saved/restored on configuration changes
@@ -460,21 +546,24 @@ ChapterListActivity (Home)
 
 ## Future Enhancement Opportunities
 
-1. **Bookmarking System**: Save favorite verses
-2. **Reading History**: Track reading progress
-3. **Search Functionality**: Find verses by keywords
-4. **Font Size Adjustment**: Accessibility improvement
-5. **Audio Narration**: Sanskrit pronunciation
-6. **Sharing**: Share verses as images/text
-7. **Daily Verse**: Notification with random verse
-8. **Annotations**: User notes on verses
-9. **Sync**: Cloud backup of bookmarks and progress
-10. **Additional Languages**: Support for more regional languages (Sanskrit, Gujarati, Tamil, etc.)
+1. **Reading History**: Track reading progress and recently read verses
+2. **Search Functionality**: Find verses by keywords or content
+3. **Font Size Adjustment**: Accessibility improvement for better readability
+4. **Audio Narration**: Sanskrit pronunciation with playback controls
+5. **Sharing**: Share verses as images or formatted text
+6. **Daily Verse**: Notification with random verse of the day
+7. **Annotations**: User notes and personal commentary on verses
+8. **Cloud Sync**: Backup bookmarks, notes, and progress to cloud
+9. **Additional Languages**: Support for more regional languages (Sanskrit, Gujarati, Tamil, etc.)
+10. **Verse Comparison**: Side-by-side view of different translations
 
 ### Recently Implemented
 - ✅ **Multiple Translations**: Support for 7 authors across Hindi and English
 - ✅ **Author Selection**: Bottom sheet UI for choosing translation author
 - ✅ **Dynamic Translation Switching**: Real-time updates when changing language or author
+- ✅ **Bookmarking System**: Save favorite verses with persistent storage
+- ✅ **Saved Verses View**: Dedicated tab to view and access all bookmarked verses
+- ✅ **Bottom Navigation**: Seamless switching between chapters and saved verses
 
 ## Conclusion
 

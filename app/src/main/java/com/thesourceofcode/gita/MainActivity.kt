@@ -24,6 +24,7 @@ import com.thesourceofcode.gita.adapter.AuthorAdapter
 import com.thesourceofcode.gita.adapter.VerseAdapter
 import com.thesourceofcode.gita.model.LanguageAuthorData
 import com.thesourceofcode.gita.model.VerseItem
+import com.thesourceofcode.gita.utils.BookmarkManager
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
 class MainActivity : AppCompatActivity() {
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnThemeToggle: ImageButton
     private lateinit var btnLanguageToggle: ImageButton
+    private lateinit var btnBookmark: ImageButton
 
     private lateinit var verses: List<com.thesourceofcode.gita.model.Verse>
     private lateinit var adapter: VerseAdapter
@@ -65,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         btnThemeToggle = findViewById(R.id.btnThemeToggle)
         btnLanguageToggle = findViewById(R.id.btnLanguageToggle)
+        btnBookmark = findViewById(R.id.btnBookmark)
 
         // Load saved language and author preferences
         val prefs = getSharedPreferences("gita_prefs", MODE_PRIVATE)
@@ -81,6 +84,11 @@ class MainActivity : AppCompatActivity() {
         updateLanguageIcon()
         btnLanguageToggle.setOnClickListener {
             showLanguageSelectionBottomSheet()
+        }
+
+        // Setup bookmark button
+        btnBookmark.setOnClickListener {
+            toggleBookmark()
         }
 
         // Apply window insets
@@ -128,9 +136,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            // Get starting chapter if provided
+            // Get starting chapter or verse if provided
             val startChapter = intent.getIntExtra("CHAPTER_NUMBER", 1)
-            val startPosition = verses.indexOfFirst { it.chapterNumber == startChapter }
+            val verseId = intent.getIntExtra("VERSE_ID", -1)
+            
+            val startPosition = if (verseId != -1) {
+                // Find position by verse ID
+                verses.indexOfFirst { it.id == verseId }
+            } else {
+                // Find position by chapter number
+                verses.indexOfFirst { it.chapterNumber == startChapter }
+            }
 
             // Set initial position
             if (startPosition >= 0) {
@@ -139,6 +155,9 @@ class MainActivity : AppCompatActivity() {
                 updateCounter(0)
             }
         }
+        
+        // Update bookmark icon for initial verse
+        updateBookmarkIcon()
 
         // Toolbar navigation
         toolbar.setNavigationOnClickListener {
@@ -153,6 +172,7 @@ class MainActivity : AppCompatActivity() {
                 super.onPageSelected(position)
                 updateCounter(position)
                 updateNavigationButtons(position)
+                updateBookmarkIcon()
             }
         })
 
@@ -366,5 +386,26 @@ class MainActivity : AppCompatActivity() {
         val iconText = if (currentLanguage == "hindi") "En" else "हिं"
         // For now, we'll use the language icon. If you want to show text, you'd need to create a custom view
         // The icon will be the same, but we could add different icons if needed
+    }
+
+    private fun toggleBookmark() {
+        val currentPosition = viewPager.currentItem
+        val verse = verses[currentPosition]
+        
+        BookmarkManager.toggleBookmark(this, verse.id, verse.chapterNumber, verse.verseNumber)
+        updateBookmarkIcon()
+    }
+
+    private fun updateBookmarkIcon() {
+        val currentPosition = viewPager.currentItem
+        val verse = verses[currentPosition]
+        val isBookmarked = BookmarkManager.isBookmarked(this, verse.id)
+        
+        val iconRes = if (isBookmarked) {
+            R.drawable.ic_bookmark
+        } else {
+            R.drawable.ic_bookmark_border
+        }
+        btnBookmark.setImageDrawable(ContextCompat.getDrawable(this, iconRes))
     }
 }
