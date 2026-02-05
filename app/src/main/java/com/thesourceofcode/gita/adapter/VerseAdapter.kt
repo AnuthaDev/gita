@@ -12,7 +12,11 @@ import com.thesourceofcode.gita.model.Speaker
 import com.thesourceofcode.gita.model.Verse
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
-class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<VerseAdapter.VerseViewHolder>() {
+class VerseAdapter(
+    private val verses: List<Verse>,
+    private var currentLanguage: String = "hindi",
+    private var currentAuthor: String = "Swami Ramsukhdas"
+) : RecyclerView.Adapter<VerseAdapter.VerseViewHolder>() {
 
     inner class VerseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val verseContainer: View = itemView.findViewById(R.id.verseContainer)
@@ -93,9 +97,16 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
             }
         }
         
-        // Get Hindi translation from translation.json
-        val hindiTranslation = GitaJsonParser.getHindiTranslation(context, verse.id)
-        holder.hindiTranslation.text = hindiTranslation?.description ?: verse.transliteration
+        // Get translation based on current language and author preference
+        val translation = if (currentLanguage == "hindi") {
+            GitaJsonParser.getHindiTranslation(context, verse.id, currentAuthor)
+        } else {
+            GitaJsonParser.getVerseTranslations(context, verse.id, "english")
+                .find { it.authorName == currentAuthor }
+                ?: GitaJsonParser.getVerseTranslations(context, verse.id, "english").firstOrNull()
+        }
+        
+        holder.hindiTranslation.text = translation?.description ?: verse.transliteration
         holder.hindiTranslation.typeface = hindRegular
         
         // Set transliteration
@@ -149,4 +160,15 @@ class VerseAdapter(private val verses: List<Verse>) : RecyclerView.Adapter<Verse
     }
 
     override fun getItemCount(): Int = verses.size
+    
+    fun updateLanguage(language: String) {
+        currentLanguage = language
+        notifyDataSetChanged()
+    }
+    
+    fun updateLanguageAndAuthor(language: String, author: String) {
+        currentLanguage = language
+        currentAuthor = author
+        notifyDataSetChanged()
+    }
 }

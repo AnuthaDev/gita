@@ -2,13 +2,32 @@
 
 ## Overview
 
-The Bhagavad Gita Android application is a native Android app built with Kotlin that provides users with access to all 701 verses from the 18 chapters of the Bhagavad Gita. The app features Sanskrit shlokas, Hindi translations, English transliterations, word-by-word meanings, and chapter summaries in both Hindi and English.
+The Bhagavad Gita Android application is a native Android app built with Kotlin that provides users with access to all 701 verses from the 18 chapters of the Bhagavad Gita. The app features Sanskrit shlokas, **multiple Hindi and English translations from different authors**, English transliterations, word-by-word meanings, and chapter summaries in both Hindi and English.
+
+**Key Feature**: Users can select from multiple translation authors for both Hindi and English, providing diverse perspectives on the sacred text.
 
 **Package Name**: `com.thesourceofcode.gita`
 
 **Target Platform**: Android (minSdk: 24, targetSdk: 36)
 
 **Programming Language**: Kotlin
+
+## Translation Support
+
+The app provides comprehensive translation support with **7 different translation authors**:
+
+**Hindi Translations** (2 authors):
+- Swami Ramsukhdas
+- Swami Tejomayananda
+
+**English Translations** (5 authors):
+- Swami Adidevananda
+- Swami Gambirananda
+- Swami Sivananda
+- Dr. S. Sankaranarayan
+- Shri Purohit Swami
+
+Users can seamlessly switch between languages and authors through an intuitive bottom sheet interface, allowing them to compare interpretations and gain deeper understanding of each verse.
 
 ## Project Structure
 
@@ -18,7 +37,7 @@ app/src/main/
 ├── assets/
 │   ├── chapters.json          # Chapter metadata and summaries
 │   ├── verse.json             # All 701 verses with Sanskrit text
-│   ├── translation.json       # Hindi translations by various authors
+│   ├── translation.json       # Hindi & English translations by multiple authors
 │   ├── Hind-Regular.ttf       # Font for Hindi text
 │   └── Jaini-Regular.ttf      # Font for Sanskrit Devanagari text
 ├── java/com/thesourceofcode/gita/
@@ -27,12 +46,14 @@ app/src/main/
 │   ├── ChapterSummaryActivity.kt         # Chapter summary display
 │   ├── adapter/
 │   │   ├── VerseAdapter.kt               # ViewPager2 adapter for verses
-│   │   └── ChapterListAdapter.kt         # RecyclerView adapter for chapters
+│   │   ├── ChapterListAdapter.kt         # RecyclerView adapter for chapters
+│   │   └── AuthorAdapter.kt              # RecyclerView adapter for author selection
 │   ├── model/
 │   │   ├── Verse.kt                      # Verse data model
 │   │   ├── Chapter.kt                    # Chapter data model
 │   │   ├── Translation.kt                # Translation data model
 │   │   ├── Speaker.kt                    # Speaker enum (Krishna, Arjuna, etc.)
+│   │   ├── LanguageAuthor.kt             # Language and author data model
 │   │   └── VerseItem.kt                  # Additional verse item model
 │   └── utils/
 │       └── GitaJsonParser.kt             # JSON parsing and data access
@@ -80,7 +101,11 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
   - Previous/Next navigation buttons
   - Verse counter showing position within current chapter
   - Theme toggle (light/dark mode)
-  - Info button to view current chapter summary
+  - Translation language and author selection via bottom sheet
+  - Bottom sheet displays current language and author with expansion to show:
+    - Language chips (Hindi/English)
+    - Author list for selected language
+  - Preserves language and author preferences in SharedPreferences
   - Preserves scroll position during theme changes
   - Accepts `CHAPTER_NUMBER` intent extra to start at specific chapter
 
@@ -103,8 +128,19 @@ The app follows a **simplified MVC (Model-View-Controller)** architecture patter
   - Handles expandable word meanings section
   - Shows chapter indicator for first verse of each chapter
   - Separates speaker prefix from main shloka text
-  - Loads Hindi translations from translation.json
+  - Loads translations by language and author from translation.json
+  - Supports dynamic language and author switching
   - Applies custom fonts (Jaini for Sanskrit, Hind for Hindi)
+- **Methods**:
+  - `updateLanguage(language: String)` - Updates translation language
+  - `updateLanguageAndAuthor(language: String, author: String)` - Updates both language and author
+
+#### AuthorAdapter
+- **Type**: RecyclerView.Adapter for author list in bottom sheet
+- **Responsibilities**:
+  - Displays list of available authors for selected language
+  - Handles author selection clicks
+  - Triggers language and author update in MainActivity
 
 #### ChapterListAdapter
 - **Type**: RecyclerView.Adapter for chapter list
@@ -177,6 +213,19 @@ enum class Speaker {
 }
 ```
 
+#### LanguageAuthor
+```kotlin
+data class LanguageAuthor(
+    val language: String,              // "hindi" or "english"
+    val languageDisplayName: String,   // "हिन्दी" or "English"
+    val authors: List<String>          // Available authors for this language
+)
+```
+
+**Available Languages and Authors**:
+- **Hindi**: Swami Ramsukhdas, Swami Tejomayananda
+- **English**: Swami Adidevananda, Swami Gambirananda, Swami Sivananda, Dr. S. Sankaranarayan, Shri Purohit Swami
+
 ## Data Layer
 
 ### GitaJsonParser (Singleton)
@@ -214,7 +263,7 @@ A utility object that provides data access methods:
 - Uses item_chapter.xml for each list item
 
 #### activity_main.xml (Reading Screen)
-- MaterialToolbar with chapter title, info button, and theme toggle
+- MaterialToolbar with chapter title, translation language toggle, and theme toggle
 - ViewPager2 for verse pagination
 - Bottom navigation bar with previous/next buttons and verse counter
 - Uses item_verse.xml for each verse page
@@ -240,6 +289,22 @@ A utility object that provides data access methods:
 - Chapter meaning
 - Verse count
 - Info button
+
+#### bottom_sheet_language_selection.xml
+- Title: "Translation Settings"
+- Current selection card showing:
+  - Current language (Hindi/English)
+  - Current author name
+  - Right arrow icon indicating clickable element
+- Expandable language selection view (initially hidden):
+  - Language chip group with chips for each language
+  - Author section title
+  - RecyclerView for author list
+- Uses item_author.xml for each author item
+
+#### item_author.xml
+- MaterialCardView containing author name
+- Clickable to select author and update translations
 
 ### Theme System
 
@@ -276,7 +341,7 @@ App Launch
 ChapterListActivity (Home)
     ├── Click Chapter → MainActivity (start at chapter)
     │       ├── Swipe/Navigate between verses
-    │       ├── Click Info → ChapterSummaryActivity
+    │       ├── Toggle translation language (Hindi/English)
     │       └── Back → ChapterListActivity
     │
     └── Click Info Button → ChapterSummaryActivity
@@ -361,13 +426,15 @@ ChapterListActivity (Home)
 ### Asset Files
 - **chapters.json**: Chapter metadata (18 chapters)
 - **verse.json**: All verses (701 verses)
-- **translation.json**: Hindi translations by various authors
+- **translation.json**: Hindi & English translations from 7 authors
 - **Fonts**: Jaini-Regular.ttf, Hind-Regular.ttf
 
 ## State Management
 
 ### Activity State
-- **Theme Preference**: Stored in SharedPreferences (`gita_prefs`)
+- **Theme Preference**: Stored in SharedPreferences (`gita_prefs`, key: `theme_mode`)
+- **Translation Language Preference**: Stored in SharedPreferences (`gita_prefs`, key: `translation_language`)
+- **Translation Author Preference**: Stored in SharedPreferences (`gita_prefs`, key: `translation_author`)
 - **Reading Position**: Intent extras and SharedPreferences
 - **Scroll Position**: Preserved during theme changes
 - **ViewPager Position**: Saved/restored on configuration changes
@@ -400,9 +467,14 @@ ChapterListActivity (Home)
 5. **Audio Narration**: Sanskrit pronunciation
 6. **Sharing**: Share verses as images/text
 7. **Daily Verse**: Notification with random verse
-8. **Multiple Translations**: Support multiple authors
-9. **Annotations**: User notes on verses
-10. **Sync**: Cloud backup of bookmarks and progress
+8. **Annotations**: User notes on verses
+9. **Sync**: Cloud backup of bookmarks and progress
+10. **Additional Languages**: Support for more regional languages (Sanskrit, Gujarati, Tamil, etc.)
+
+### Recently Implemented
+- ✅ **Multiple Translations**: Support for 7 authors across Hindi and English
+- ✅ **Author Selection**: Bottom sheet UI for choosing translation author
+- ✅ **Dynamic Translation Switching**: Real-time updates when changing language or author
 
 ## Conclusion
 

@@ -21,15 +21,15 @@
         app:layout_constraintTop_toTopOf="parent">
         
         <ImageButton
-            android:id="@+id/btnInfo"
+            android:id="@+id/btnLanguageToggle"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="end"
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_info"
+            android:src="@drawable/ic_language"
             android:tint="?attr/colorPrimary"
-            android:contentDescription="Chapter info"
+            android:contentDescription="Toggle translation language"
             android:padding="12dp"/>
         
         <ImageButton

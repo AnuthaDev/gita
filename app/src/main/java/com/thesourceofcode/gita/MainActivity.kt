@@ -2,7 +2,9 @@ package com.thesourceofcode.gita
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -10,10 +12,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.thesourceofcode.gita.adapter.AuthorAdapter
 import com.thesourceofcode.gita.adapter.VerseAdapter
+import com.thesourceofcode.gita.model.LanguageAuthorData
 import com.thesourceofcode.gita.model.VerseItem
 import com.thesourceofcode.gita.utils.GitaJsonParser
 
@@ -30,10 +39,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var verseCounter: TextView
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnThemeToggle: ImageButton
-    private lateinit var btnInfo: ImageButton
+    private lateinit var btnLanguageToggle: ImageButton
 
     private lateinit var verses: List<com.thesourceofcode.gita.model.Verse>
     private lateinit var adapter: VerseAdapter
+    private var currentLanguage: String = "hindi"
+    private var currentAuthor: String = "Swami Ramsukhdas"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +64,12 @@ class MainActivity : AppCompatActivity() {
         verseCounter = findViewById(R.id.verseCounter)
         toolbar = findViewById(R.id.toolbar)
         btnThemeToggle = findViewById(R.id.btnThemeToggle)
+        btnLanguageToggle = findViewById(R.id.btnLanguageToggle)
+
+        // Load saved language and author preferences
+        val prefs = getSharedPreferences("gita_prefs", MODE_PRIVATE)
+        currentLanguage = prefs.getString("translation_language", "hindi") ?: "hindi"
+        currentAuthor = prefs.getString("translation_author", "Swami Ramsukhdas") ?: "Swami Ramsukhdas"
 
         // Setup theme toggle
         updateThemeIcon()
@@ -60,10 +77,10 @@ class MainActivity : AppCompatActivity() {
             toggleTheme()
         }
 
-        // Setup info button
-        btnInfo = toolbar.findViewById(R.id.btnInfo)
-        btnInfo.setOnClickListener {
-            showCurrentChapterSummary()
+        // Setup language toggle - now opens bottom sheet
+        updateLanguageIcon()
+        btnLanguageToggle.setOnClickListener {
+            showLanguageSelectionBottomSheet()
         }
 
         // Apply window insets
@@ -77,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         verses = GitaJsonParser.loadVerses(this)
 
         // Setup ViewPager
-        adapter = VerseAdapter(verses)
+        adapter = VerseAdapter(verses, currentLanguage, currentAuthor)
         viewPager.adapter = adapter
         viewPager.offscreenPageLimit = 1
 
@@ -85,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         setupNavigation()
 
         // Check for saved position from theme change
-        val prefs = getSharedPreferences("gita_prefs", MODE_PRIVATE)
         val savedPosition = prefs.getInt(KEY_CURRENT_POSITION, -1)
         val savedScrollY = prefs.getInt(KEY_SCROLL_POSITION, -1)
 
@@ -127,17 +143,6 @@ class MainActivity : AppCompatActivity() {
         // Toolbar navigation
         toolbar.setNavigationOnClickListener {
             finish()
-        }
-    }
-
-    private fun showCurrentChapterSummary() {
-        val currentPosition = viewPager.currentItem
-        if (currentPosition >= 0 && currentPosition < verses.size) {
-            val verse = verses[currentPosition]
-            val intent = Intent(this, ChapterSummaryActivity::class.java)
-            intent.putExtra("CHAPTER_NUMBER", verse.chapterNumber)
-            intent.putExtra("FROM_READING", true)
-            startActivity(intent)
         }
     }
 
@@ -240,5 +245,126 @@ class MainActivity : AppCompatActivity() {
             R.drawable.ic_dark_mode
         }
         btnThemeToggle.setImageDrawable(ContextCompat.getDrawable(this, iconRes))
+    }
+
+    private fun showLanguageSelectionBottomSheet() {
+        val bottomSheetDialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_language_selection, null)
+        bottomSheetDialog.setContentView(view)
+
+        val currentSelectionCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.currentSelectionCard)
+        val currentLanguageText = view.findViewById<TextView>(R.id.currentLanguage)
+        val currentAuthorText = view.findViewById<TextView>(R.id.currentAuthor)
+        val languageSelectionView = view.findViewById<LinearLayout>(R.id.languageSelectionView)
+        val languageChipGroup = view.findViewById<ChipGroup>(R.id.languageChipGroup)
+        val authorSectionTitle = view.findViewById<TextView>(R.id.authorSectionTitle)
+        val authorRecyclerView = view.findViewById<RecyclerView>(R.id.authorRecyclerView)
+
+        // Set current selection
+        val languageDisplayName = if (currentLanguage == "hindi") "हिन्दी" else "English"
+        currentLanguageText.text = languageDisplayName
+        currentAuthorText.text = currentAuthor
+
+        // Click on current selection to expand language selection
+        currentSelectionCard.setOnClickListener {
+            currentSelectionCard.visibility = View.GONE
+            languageSelectionView.visibility = View.VISIBLE
+            setupLanguageChips(languageChipGroup, authorSectionTitle, authorRecyclerView, bottomSheetDialog)
+        }
+
+        bottomSheetDialog.show()
+    }
+
+    private fun setupLanguageChips(
+        chipGroup: ChipGroup,
+        authorSectionTitle: TextView,
+        authorRecyclerView: RecyclerView,
+        bottomSheetDialog: BottomSheetDialog
+    ) {
+        chipGroup.removeAllViews()
+        val languages = LanguageAuthorData.getAvailableLanguages()
+
+        languages.forEach { languageAuthor ->
+            val chip = Chip(this)
+            chip.text = languageAuthor.languageDisplayName
+            chip.isCheckable = true
+            chip.isChecked = languageAuthor.language == currentLanguage
+            
+            chip.setOnClickListener {
+                // When language chip is clicked, uncheck all other chips
+                for (i in 0 until chipGroup.childCount) {
+                    val otherChip = chipGroup.getChildAt(i) as? Chip
+                    if (otherChip != chip) {
+                        otherChip?.isChecked = false
+                    }
+                }
+                chip.isChecked = true
+                
+                // Show author list for selected language
+                authorSectionTitle.visibility = View.VISIBLE
+                authorRecyclerView.visibility = View.VISIBLE
+                setupAuthorList(authorRecyclerView, languageAuthor.authors, languageAuthor.language, bottomSheetDialog)
+            }
+
+            chipGroup.addView(chip)
+        }
+
+        // If current language chip is selected, show authors immediately
+        val currentLanguageData = languages.find { it.language == currentLanguage }
+        if (currentLanguageData != null) {
+            authorSectionTitle.visibility = View.VISIBLE
+            authorRecyclerView.visibility = View.VISIBLE
+            setupAuthorList(authorRecyclerView, currentLanguageData.authors, currentLanguage, bottomSheetDialog)
+        }
+    }
+
+    private fun setupAuthorList(
+        recyclerView: RecyclerView,
+        authors: List<String>,
+        language: String,
+        bottomSheetDialog: BottomSheetDialog
+    ) {
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = AuthorAdapter(authors) { selectedAuthor ->
+            // Update language and author
+            currentLanguage = language
+            currentAuthor = selectedAuthor
+
+            // Save preferences
+            getSharedPreferences("gita_prefs", MODE_PRIVATE)
+                .edit()
+                .putString("translation_language", currentLanguage)
+                .putString("translation_author", currentAuthor)
+                .apply()
+
+            // Update adapter
+            adapter.updateLanguageAndAuthor(currentLanguage, currentAuthor)
+
+            // Close bottom sheet
+            bottomSheetDialog.dismiss()
+        }
+    }
+
+    private fun toggleLanguage() {
+        currentLanguage = if (currentLanguage == "hindi") "english" else "hindi"
+        
+        // Save preference
+        getSharedPreferences("gita_prefs", MODE_PRIVATE)
+            .edit()
+            .putString("translation_language", currentLanguage)
+            .apply()
+
+        // Update icon
+        updateLanguageIcon()
+        
+        // Update adapter with new language
+        adapter.updateLanguage(currentLanguage)
+    }
+
+    private fun updateLanguageIcon() {
+        // Show the language text on the button (हिं for Hindi, En for English)
+        val iconText = if (currentLanguage == "hindi") "En" else "हिं"
+        // For now, we'll use the language icon. If you want to show text, you'd need to create a custom view
+        // The icon will be the same, but we could add different icons if needed
     }
 }
